@@ -18,16 +18,25 @@ namespace GiftAtlasTools
 
     public class GiftAtlasConfigWindow : EditorWindow
     {
-        private string resourcesRootPath;
+        private static string resourcesRootPath;
         private string resourcesButton = "选择原图根目录";
 
-        private string atlasRootPath;
+        private static string atlasRootPath;
         private string atlasButton = "选择图集根目录";
+
+        private static string atlasRelativeResourcesPath;
 
 
         [MenuItem("AtlasTools/设置Atlas配置")]
         public static void ConfigAtlas()
         {
+            GiftAtlasConfig originConfig = GetConfig();
+            if (originConfig != null)
+            {
+                resourcesRootPath = originConfig.ResourcesRootPath;
+                atlasRootPath = originConfig.AtlasRootPath;
+                atlasRelativeResourcesPath = originConfig.AtlasPathInResources;
+            }
             EditorWindow.GetWindow(typeof(GiftAtlasConfigWindow)).Show();
         }
 
@@ -75,32 +84,29 @@ namespace GiftAtlasTools
 
         void OnGUI()
         {
-            GiftAtlasConfig originConfig = GetConfig();
-            if (originConfig != null)
-            {
-                resourcesRootPath = originConfig.ResourcesRootPath;
-                atlasRootPath = originConfig.AtlasRootPath;
-            }
-
             GUILayout.Label("原图根目录", EditorStyles.boldLabel);
-            resourcesRootPath = EditorGUILayout.TextField("点击按钮选取路径", resourcesRootPath);
             if (GUILayout.Button(resourcesButton))
             {
-                resourcesRootPath = EditorUtility.OpenFolderPanel("", "", "");
+                resourcesRootPath = EditorUtility.OpenFolderPanel("", Application.dataPath + resourcesRootPath, "").Replace(Application.dataPath, "");
             }
+            resourcesRootPath = EditorGUILayout.TextField("点击按钮选取路径", resourcesRootPath);
 
             GUILayout.Label("图集根目录", EditorStyles.boldLabel);
-            atlasRootPath = EditorGUILayout.TextField("点击按钮选取路径", atlasRootPath);
             if (GUILayout.Button(atlasButton))
             {
-                atlasRootPath = EditorUtility.OpenFolderPanel("", "", "");
+                atlasRootPath = EditorUtility.OpenFolderPanel("", Application.dataPath + atlasRootPath, "").Replace(Application.dataPath, "");
             }
+            atlasRootPath = EditorGUILayout.TextField("点击按钮选取路径", atlasRootPath);
+
+            GUILayout.Label("图集相对Resources路径", EditorStyles.boldLabel);
+            atlasRelativeResourcesPath = EditorGUILayout.TextField("填写路径", atlasRelativeResourcesPath);
 
             if (GUILayout.Button("保存设置"))
             {
                 GiftAtlasConfig config = ScriptableObject.CreateInstance<GiftAtlasConfig>();
                 config.ResourcesRootPath = resourcesRootPath;
                 config.AtlasRootPath = atlasRootPath;
+                config.AtlasPathInResources = atlasRelativeResourcesPath;
                 CreateConfigAsset(config);
                 EditorWindow.GetWindow(typeof(GiftAtlasConfigWindow)).Close();
             }
@@ -167,12 +173,13 @@ namespace GiftAtlasTools
 
                 spts.Add(sprite);
             }
-            
+
             return spts;
         }
 
         private static string sptDesDir = Application.dataPath + "/Resources";
         private static string sptSrcDir = Application.dataPath + "/Art";
+        private static string atlasRelativePath = "";
 
         [MenuItem("AtlasTools/按目录打包图集")]
         public static void CreateAtlasByFolders()
@@ -197,14 +204,14 @@ namespace GiftAtlasTools
                 string atlasName = dirInfo.Name + ".spriteatlas";
                 if (IsAtlasExists(atlasName))
                 {
-                    SpriteAtlas atlas = Resources.Load<SpriteAtlas>(dirInfo.Name);
+                    SpriteAtlas atlas = Resources.Load<SpriteAtlas>(atlasRelativePath + dirInfo.Name);
                     RefreshAtlas(atlas);
                     AssetDatabase.Refresh();
 
                     continue;
                 }
                 CreateAtlas(atlasName);
-                SpriteAtlas sptAtlas = Resources.Load<SpriteAtlas>(dirInfo.Name);
+                SpriteAtlas sptAtlas = Resources.Load<SpriteAtlas>(atlasRelativePath + dirInfo.Name);
                 Debug.Log(sptAtlas.tag);
                 AddPackAtlas(sptAtlas, folders.ToArray());
             }
@@ -238,14 +245,14 @@ namespace GiftAtlasTools
                 string atlasName = dirInfo.Name + ".spriteatlas";
                 if (IsAtlasExists(atlasName))
                 {
-                    SpriteAtlas atlas = Resources.Load<SpriteAtlas>(dirInfo.Name);
+                    SpriteAtlas atlas = Resources.Load<SpriteAtlas>(atlasRelativePath + dirInfo.Name);
                     RefreshAtlas(atlas);
                     AssetDatabase.Refresh();
 
                     continue;
                 }
                 CreateAtlas(atlasName);
-                SpriteAtlas sptAtlas = Resources.Load<SpriteAtlas>(dirInfo.Name);
+                SpriteAtlas sptAtlas = Resources.Load<SpriteAtlas>(atlasRelativePath + dirInfo.Name);
                 Debug.Log(sptAtlas.tag);
                 AddPackAtlas(sptAtlas, spts.ToArray());
             }
@@ -264,8 +271,9 @@ namespace GiftAtlasTools
             else
             {
                 GiftAtlasConfig config = GiftAtlasConfigWindow.GetConfig();
-                sptDesDir = config.AtlasRootPath;
-                sptSrcDir = config.ResourcesRootPath;
+                sptDesDir = Application.dataPath + config.AtlasRootPath;
+                sptSrcDir = Application.dataPath + config.ResourcesRootPath;
+                atlasRelativePath = config.AtlasPathInResources;
                 return true;
             }
         }
