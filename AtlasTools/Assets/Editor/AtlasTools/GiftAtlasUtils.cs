@@ -102,6 +102,7 @@ namespace GiftAtlasTools
                 config.ResourcesRootPath = resourcesRootPath;
                 config.AtlasRootPath = atlasRootPath;
                 CreateConfigAsset(config);
+                EditorWindow.GetWindow(typeof(GiftAtlasConfigWindow)).Close();
             }
 
         }
