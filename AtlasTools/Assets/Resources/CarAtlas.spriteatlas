@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: CarAtlas
+  m_EditorData:
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings: []
+    packingParameters:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 0
+      enableTightPacking: 1
+    variantMultiplier: 1
+    packables:
+    - {fileID: 102900000, guid: d6e0f7f89bf594662a05f0919e60eeb0, type: 3}
+    bindAsDefault: 1
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: 477cab294f3f44c0a8e024a220712c54, type: 3}
+  - {fileID: 21300000, guid: 6ae0c8f4a4f024dea9b61fcd9e46764e, type: 3}
+  - {fileID: 21300000, guid: cb4d3de66eb31498596a3a74197214fe, type: 3}
+  - {fileID: 21300000, guid: 4d83c9beb243947da8b7b1127a01150a, type: 3}
+  - {fileID: 21300000, guid: 43cc686094e064a7c95ac188131920ff, type: 3}
+  - {fileID: 21300000, guid: 97b90b2d66dcb45f0ad45b9705e9d964, type: 3}
+  - {fileID: 21300000, guid: 7411197b1759744c5bdc7bd4c159e754, type: 3}
+  - {fileID: 21300000, guid: 95a9eecd5644a4d749b6cdfc3e06d844, type: 3}
+  - {fileID: 21300000, guid: f20582548a80446d2bdadf92ccdad6c7, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - 3_1@3x
+  - 3_2@3x
+  - 4
+  - 2_3@3x
+  - 2_2 @3x
+  - 1_2@3x
+  - 1_1@3x
+  - 2_4@3x
+  - 2_1 @3x
+  m_Tag: CarAtlas
+  m_IsVariant: 0
