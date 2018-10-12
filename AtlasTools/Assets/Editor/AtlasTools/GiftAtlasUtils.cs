@@ -103,11 +103,12 @@ namespace GiftAtlasTools
 
             if (GUILayout.Button("保存设置"))
             {
-                GiftAtlasConfig config = ScriptableObject.CreateInstance<GiftAtlasConfig>();
+                GiftAtlasConfig config = HasConfig() ? GetConfig() : ScriptableObject.CreateInstance<GiftAtlasConfig>();
                 config.ResourcesRootPath = resourcesRootPath;
                 config.AtlasRootPath = atlasRootPath;
                 config.AtlasPathInResources = atlasRelativeResourcesPath;
-                CreateConfigAsset(config);
+                if (!HasConfig()) CreateConfigAsset(config);
+
                 EditorWindow.GetWindow(typeof(GiftAtlasConfigWindow)).Close();
             }
 
