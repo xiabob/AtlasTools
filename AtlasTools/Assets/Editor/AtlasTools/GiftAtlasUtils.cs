@@ -24,6 +24,8 @@ namespace GiftAtlasTools
         private static string atlasRootPath;
         private string atlasButton = "选择图集根目录";
 
+        private static string ignoreResourcesFolders;
+
         private static string atlasRelativeResourcesPath;
 
 
@@ -36,6 +38,7 @@ namespace GiftAtlasTools
                 resourcesRootPath = originConfig.ResourcesRootPath;
                 atlasRootPath = originConfig.AtlasRootPath;
                 atlasRelativeResourcesPath = originConfig.AtlasPathInResources;
+                ignoreResourcesFolders = originConfig.IgnoreResourcesFolders;
             }
             EditorWindow.GetWindow(typeof(GiftAtlasConfigWindow)).Show();
         }
@@ -91,12 +94,21 @@ namespace GiftAtlasTools
             }
             resourcesRootPath = EditorGUILayout.TextField("点击按钮选取路径", resourcesRootPath);
 
+            GUILayout.Space(8);
+
             GUILayout.Label("图集根目录", EditorStyles.boldLabel);
             if (GUILayout.Button(atlasButton))
             {
                 atlasRootPath = EditorUtility.OpenFolderPanel("", Application.dataPath + atlasRootPath, "").Replace(Application.dataPath, "");
             }
             atlasRootPath = EditorGUILayout.TextField("点击按钮选取路径", atlasRootPath);
+
+            GUILayout.Space(8);
+
+            GUILayout.Label("忽略目录列表", EditorStyles.boldLabel);
+            ignoreResourcesFolders = EditorGUILayout.TextField("填写名称，以”，“分隔", ignoreResourcesFolders);
+
+            GUILayout.Space(8);
 
             GUILayout.Label("图集相对Resources路径", EditorStyles.boldLabel);
             atlasRelativeResourcesPath = EditorGUILayout.TextField("填写路径", atlasRelativeResourcesPath);
@@ -106,7 +118,8 @@ namespace GiftAtlasTools
                 GiftAtlasConfig config = HasConfig() ? GetConfig() : ScriptableObject.CreateInstance<GiftAtlasConfig>();
                 config.ResourcesRootPath = resourcesRootPath;
                 config.AtlasRootPath = atlasRootPath;
-                config.AtlasPathInResources = atlasRelativeResourcesPath;
+                config.AtlasPathInResources = string.IsNullOrEmpty(atlasRelativeResourcesPath) ? "" : atlasRelativeResourcesPath;
+                config.IgnoreResourcesFolders = string.IsNullOrEmpty(ignoreResourcesFolders) ? "" : ignoreResourcesFolders;
                 if (!HasConfig()) CreateConfigAsset(config);
 
                 EditorWindow.GetWindow(typeof(GiftAtlasConfigWindow)).Close();
@@ -181,6 +194,7 @@ namespace GiftAtlasTools
         private static string sptDesDir = Application.dataPath + "/Resources";
         private static string sptSrcDir = Application.dataPath + "/Art";
         private static string atlasRelativePath = "";
+        private static string[] ignoreFolders = new string[] { };
 
         [MenuItem("AtlasTools/按目录打包图集")]
         public static void CreateAtlasByFolders()
@@ -194,14 +208,13 @@ namespace GiftAtlasTools
             List<Object> folders = new List<Object>();
             foreach (DirectoryInfo dirInfo in rootDirInfo.GetDirectories())
             {
+                if (dirInfo == null || ignoreFolders.Contains(dirInfo.Name)) continue;
+
                 folders.Clear();
-                if (dirInfo != null)
-                {
-                    string assetPath = dirInfo.FullName.Substring(dirInfo.FullName.IndexOf("Assets"));
-                    var o = AssetDatabase.LoadAssetAtPath<DefaultAsset>(assetPath);
-                    if (IsPackable(o))
-                        folders.Add(o);
-                }
+                string assetPath = dirInfo.FullName.Substring(dirInfo.FullName.IndexOf("Assets"));
+                var o = AssetDatabase.LoadAssetAtPath<DefaultAsset>(assetPath);
+                if (IsPackable(o)) folders.Add(o);
+
                 string atlasName = dirInfo.Name + ".spriteatlas";
                 if (IsAtlasExists(atlasName))
                 {
@@ -220,7 +233,42 @@ namespace GiftAtlasTools
             //add texture by your self
         }
 
-        [MenuItem("AtlasTools/AtlasMaker By Sprite")]
+        [MenuItem("AtlasTools/按目录打包图集（不更新图片导入格式）")]
+        public static void CreateAtlasByFoldersWithoutUpdateSprite()
+        {
+            if (!CheckConfig()) return;
+
+            DirectoryInfo rootDirInfo = new DirectoryInfo(sptSrcDir);
+            //add folders
+            List<Object> folders = new List<Object>();
+            foreach (DirectoryInfo dirInfo in rootDirInfo.GetDirectories())
+            {
+                if (dirInfo == null || ignoreFolders.Contains(dirInfo.Name)) continue;
+
+                folders.Clear();
+                string assetPath = dirInfo.FullName.Substring(dirInfo.FullName.IndexOf("Assets"));
+                var o = AssetDatabase.LoadAssetAtPath<DefaultAsset>(assetPath);
+                if (IsPackable(o)) folders.Add(o);
+
+                string atlasName = dirInfo.Name + ".spriteatlas";
+                if (IsAtlasExists(atlasName))
+                {
+                    SpriteAtlas atlas = Resources.Load<SpriteAtlas>(atlasRelativePath + dirInfo.Name);
+                    RefreshAtlas(atlas);
+                    AssetDatabase.Refresh();
+
+                    continue;
+                }
+                CreateAtlas(atlasName);
+                SpriteAtlas sptAtlas = Resources.Load<SpriteAtlas>(atlasRelativePath + dirInfo.Name);
+                Debug.Log(sptAtlas.tag);
+                AddPackAtlas(sptAtlas, folders.ToArray());
+            }
+
+            //add texture by your self
+        }
+
+        // [MenuItem("AtlasTools/AtlasMaker By Sprite")]
         public static void CreateAtlasBySprite()
         {
             if (!CheckConfig()) return;
@@ -275,6 +323,13 @@ namespace GiftAtlasTools
                 sptDesDir = Application.dataPath + config.AtlasRootPath;
                 sptSrcDir = Application.dataPath + config.ResourcesRootPath;
                 atlasRelativePath = config.AtlasPathInResources;
+
+                if (!string.IsNullOrEmpty(config.IgnoreResourcesFolders))
+                {
+                    string[] ignores = config.IgnoreResourcesFolders.Split(new string[] { "," }, System.StringSplitOptions.None);
+                    if (ignores != null) ignoreFolders = ignores;
+                }
+
                 return true;
             }
         }
